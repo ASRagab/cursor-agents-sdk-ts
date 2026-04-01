@@ -53,7 +53,9 @@ export type {
   ListArtifactsResponse,
   MeResponse,
   ModelsResponse,
+  Prompt,
   RepositoriesResponse,
   Repository,
+  Source,
   Target,
 } from "./schemas";
