@@ -18,7 +18,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "bunx biome check src/ tests/",
     "lint:fix": "bunx biome check --write src/ tests/",
-    "test": "bun test",
+    "test": "bun test tests/unit",
+    "test:all": "bun test tests",
+    "test:integration": "bun test tests/integration",
     "build": "bun build src/index.ts --outdir dist --target node --format esm"
   },
   "files": ["dist", "src", "README.md", "LICENSE"],
