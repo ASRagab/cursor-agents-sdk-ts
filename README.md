@@ -10,12 +10,26 @@ Create, manage, and monitor AI coding agents that work autonomously on your GitH
 bun add cursor-agents
 ```
 
+The package also installs a CLI binary:
+
+```bash
+bunx cursor-agents --help
+# or after a global install
+npm install -g cursor-agents
+cursor-agents --help
+```
+
+### CLI Packaging
+
+The published package ships a Node entrypoint at `bin/cursor-agents.js` that loads the built CLI bundle from `dist/cli/index.js`. That keeps `cursor-agents` self-contained for global installs, `npx`, and `bunx` without requiring users to execute the TypeScript source directly.
+
 Or clone and use directly:
 
 ```bash
 git clone https://github.com/ASRagab/cursor-agents-sdk-ts.git
 cd cursor-agents-sdk-ts
 bun install
+node bin/cursor-agents.js --help
 ```
 
 ## Authentication
@@ -24,6 +38,13 @@ Get an API key from the [Cursor Dashboard](https://cursor.com/dashboard).
 
 ```bash
 export CURSOR_API_KEY="your-key-here"
+```
+
+The SDK and CLI also read `CURSOR_API_KEY` and `CURSOR_BASE_URL` from a local `.env` file in the current working directory:
+
+```dotenv
+CURSOR_API_KEY=your-key-here
+CURSOR_BASE_URL=https://api.cursor.com
 ```
 
 ## SDK Usage
@@ -91,16 +112,28 @@ cursor-agents repos
 
 # Create an agent
 cursor-agents create \
-  --repo https://github.com/owner/repo \
+  --repo owner/repo \
   --ref main \
   --prompt "Fix the failing tests" \
   --model claude-4-sonnet-thinking \
   --auto-pr
 
+# Full GitHub URLs also work
+cursor-agents create \
+  --repo https://github.com/owner/repo \
+  --ref main \
+  --prompt "Fix the failing tests"
+
 # Create from a PR
 cursor-agents create \
   --pr https://github.com/owner/repo/pull/42 \
   --prompt "Review and fix the issues"
+
+# --auto-branch is only valid with --pr
+cursor-agents create \
+  --pr https://github.com/owner/repo/pull/42 \
+  --prompt "Address review feedback" \
+  --auto-branch
 
 # Use a prompt file for long prompts
 cursor-agents create \
@@ -179,6 +212,30 @@ On error:
 | 4 | Rate limited |
 | 5 | Timeout |
 
+### Coding Agent Skill
+
+The repository includes an agent skill at [`skills/cursor-agents-cli/SKILL.md`](skills/cursor-agents-cli/SKILL.md).
+This file teaches agents like Claude Code, Codex, Cursor, and others how to operate the CLI:
+flag rules, workflow recipes, error recovery, and the JSON output contract.
+
+Install via the [`npx skills`](https://github.com/vercel-labs/skills) ecosystem:
+
+```bash
+# Install to all detected agents
+npx skills add ASRagab/cursor-agents-sdk-ts
+
+# Install to a specific agent
+npx skills add ASRagab/cursor-agents-sdk-ts -a claude-code
+
+# Install to a specific agent globally
+npx skills add ASRagab/cursor-agents-sdk-ts -a claude-code -g
+
+# List available skills first
+npx skills add ASRagab/cursor-agents-sdk-ts --list
+```
+
+Or copy the file manually into your agent's skills directory (e.g., `.claude/skills/` for Claude Code).
+
 ## SDK API Reference
 
 ### `CursorAgents(opts?)`
@@ -225,7 +282,8 @@ bun run typecheck    # TypeScript type checking
 bun run lint         # Biome linter
 bun test             # Unit tests
 bun test tests/integration  # Integration tests (needs CURSOR_API_KEY)
-bun run build        # Build for Node
+bun run build        # Build the SDK, CLI bundle, and type declarations
+npm pack --dry-run   # Verify published package contents
 ```
 
 ## License

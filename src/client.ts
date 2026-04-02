@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+import { config as loadDotEnv } from "dotenv";
 import type { z } from "zod";
 import { CursorAgentsError, errorCodeFromStatus } from "./errors";
 
@@ -13,12 +15,15 @@ export class BaseClient {
   private readonly baseUrl: string;
 
   constructor(opts?: ClientOptions) {
+    loadDotEnv({ path: resolve(process.cwd(), ".env"), override: false });
+
     const key = opts?.apiKey ?? process.env.CURSOR_API_KEY;
     if (!key) {
       throw new CursorAgentsError({
         code: "unauthorized",
         status: 401,
-        message: "Missing API key. Set CURSOR_API_KEY environment variable or pass apiKey option.",
+        message:
+          "Missing API key. Set CURSOR_API_KEY in your environment or .env file, or pass apiKey option.",
       });
     }
     this.apiKey = key;

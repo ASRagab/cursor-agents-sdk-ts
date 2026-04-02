@@ -13,6 +13,7 @@ describe("CursorAgentsError", () => {
     expect(err.message).toBe("Agent not found");
     expect(err.name).toBe("CursorAgentsError");
     expect(err.raw).toBeUndefined();
+    expect(err.details).toBeUndefined();
     expect(err).toBeInstanceOf(Error);
   });
 
@@ -25,6 +26,27 @@ describe("CursorAgentsError", () => {
       raw,
     });
     expect(err.raw).toEqual(raw);
+  });
+
+  test("preserves structured details", () => {
+    const err = new CursorAgentsError({
+      code: "bad_request",
+      status: 400,
+      message: "Bad Request",
+      details: {
+        hint: 'Model "gpt-5.4" is not available.',
+        suggestions: ["gpt-5.4-high"],
+        suggestionsConfidence: "high",
+        nextStep: 'Run "cursor-agents models" to list supported model ids.',
+      },
+    });
+
+    expect(err.details).toEqual({
+      hint: 'Model "gpt-5.4" is not available.',
+      suggestions: ["gpt-5.4-high"],
+      suggestionsConfidence: "high",
+      nextStep: 'Run "cursor-agents models" to list supported model ids.',
+    });
   });
 });
 

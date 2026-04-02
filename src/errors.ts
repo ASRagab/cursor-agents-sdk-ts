@@ -1,14 +1,29 @@
+export interface CursorAgentsErrorDetails {
+  hint?: string;
+  suggestions?: string[];
+  suggestionsConfidence?: "high" | "low";
+  nextStep?: string;
+}
+
 export class CursorAgentsError extends Error {
   readonly code: string;
   readonly status: number;
   readonly raw?: unknown;
+  readonly details?: CursorAgentsErrorDetails;
 
-  constructor(opts: { code: string; status: number; message: string; raw?: unknown }) {
+  constructor(opts: {
+    code: string;
+    status: number;
+    message: string;
+    raw?: unknown;
+    details?: CursorAgentsErrorDetails;
+  }) {
     super(opts.message);
     this.name = "CursorAgentsError";
     this.code = opts.code;
     this.status = opts.status;
     this.raw = opts.raw;
+    this.details = opts.details;
   }
 }
 

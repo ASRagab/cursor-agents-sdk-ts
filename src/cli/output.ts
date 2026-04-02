@@ -34,7 +34,12 @@ export function printError(err: unknown, json: boolean): void {
   if (json) {
     if (err instanceof CursorAgentsError) {
       process.stdout.write(
-        `${formatJson(false, { code: err.code, message: err.message, status: err.status })}\n`,
+        `${formatJson(false, {
+          code: err.code,
+          message: err.message,
+          status: err.status,
+          ...err.details,
+        })}\n`,
       );
     } else {
       process.stdout.write(
@@ -44,6 +49,15 @@ export function printError(err: unknown, json: boolean): void {
   } else {
     if (err instanceof CursorAgentsError) {
       process.stderr.write(`Error [${err.code}]: ${err.message}\n`);
+      if (err.details?.hint) {
+        process.stderr.write(`Hint: ${err.details.hint}\n`);
+      }
+      if (err.details?.suggestions && err.details.suggestions.length > 0) {
+        process.stderr.write(`Suggestions: ${err.details.suggestions.join(", ")}\n`);
+      }
+      if (err.details?.nextStep) {
+        process.stderr.write(`Next step: ${err.details.nextStep}\n`);
+      }
     } else {
       process.stderr.write(`Error: ${String(err)}\n`);
     }

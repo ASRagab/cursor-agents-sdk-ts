@@ -1,10 +1,16 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { z } from "zod";
 import { BaseClient } from "../../src/client";
 import { CursorAgentsError } from "../../src/errors";
 
 const originalFetch = globalThis.fetch;
 const originalEnv = { ...process.env };
+const originalCwd = process.cwd();
+
+let tempDir: string | undefined;
 
 function mockFetch(body: unknown, status = 200) {
   globalThis.fetch = mock(
@@ -25,9 +31,17 @@ describe("BaseClient constructor", () => {
   afterEach(() => {
     Object.assign(process.env, originalEnv);
     globalThis.fetch = originalFetch;
+    process.chdir(originalCwd);
+    if (tempDir) {
+      rmSync(tempDir, { force: true, recursive: true });
+      tempDir = undefined;
+    }
   });
 
   test("throws when no API key provided", () => {
+    tempDir = mkdtempSync(join(tmpdir(), "cursor-agents-no-env-"));
+    process.chdir(tempDir);
+
     expect(() => new BaseClient()).toThrow(CursorAgentsError);
     try {
       new BaseClient();
@@ -42,10 +56,39 @@ describe("BaseClient constructor", () => {
     expect(client).toBeDefined();
   });
 
+  test("reads API key from .env", () => {
+    tempDir = mkdtempSync(join(tmpdir(), "cursor-agents-env-"));
+    writeFileSync(join(tempDir, ".env"), 'CURSOR_API_KEY="dotenv_key"\n');
+    process.chdir(tempDir);
+
+    const client = new BaseClient();
+    expect(client).toBeDefined();
+  });
+
   test("explicit key overrides env", () => {
     process.env.CURSOR_API_KEY = "env_key";
     const client = new BaseClient({ apiKey: "explicit_key" });
     expect(client).toBeDefined();
+  });
+
+  test("environment variables override .env", async () => {
+    tempDir = mkdtempSync(join(tmpdir(), "cursor-agents-env-"));
+    writeFileSync(
+      join(tempDir, ".env"),
+      "CURSOR_API_KEY=dotenv_key\nCURSOR_BASE_URL=https://dotenv.api.com\n",
+    );
+    process.chdir(tempDir);
+    process.env.CURSOR_API_KEY = "env_key";
+    process.env.CURSOR_BASE_URL = "https://env.api.com";
+
+    mockFetch({ name: "test", value: 42 });
+    const client = new BaseClient();
+    await client.request("/v0/test", z.object({ name: z.string(), value: z.number() }));
+
+    const call = (globalThis.fetch as ReturnType<typeof mock>).mock.calls[0];
+    const headers = call[1]?.headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer env_key");
+    expect(call[0]).toBe("https://env.api.com/v0/test");
   });
 });
 
@@ -59,6 +102,11 @@ describe("BaseClient.request", () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
     Object.assign(process.env, originalEnv);
+    process.chdir(originalCwd);
+    if (tempDir) {
+      rmSync(tempDir, { force: true, recursive: true });
+      tempDir = undefined;
+    }
   });
 
   test("sends auth header", async () => {
@@ -114,5 +162,21 @@ describe("BaseClient.request", () => {
 
     const call = (globalThis.fetch as ReturnType<typeof mock>).mock.calls[0];
     expect(call[0]).toBe("https://custom.api.com/v0/test");
+  });
+
+  test("reads base URL from .env", async () => {
+    tempDir = mkdtempSync(join(tmpdir(), "cursor-agents-env-"));
+    writeFileSync(
+      join(tempDir, ".env"),
+      "CURSOR_API_KEY=dotenv_key\nCURSOR_BASE_URL=https://dotenv.api.com\n",
+    );
+    process.chdir(tempDir);
+
+    mockFetch({ name: "test", value: 1 });
+    const client = new BaseClient();
+    await client.request("/v0/test", testSchema);
+
+    const call = (globalThis.fetch as ReturnType<typeof mock>).mock.calls[0];
+    expect(call[0]).toBe("https://dotenv.api.com/v0/test");
   });
 });

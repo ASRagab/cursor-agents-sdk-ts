@@ -1,4 +1,3 @@
-#!/usr/bin/env bun
 import { Command } from "commander";
 import { CursorAgents } from "../index";
 import { registerAgentsCommands } from "./commands/agents";
