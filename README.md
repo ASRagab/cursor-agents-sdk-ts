@@ -6,16 +6,25 @@ Create, manage, and monitor AI coding agents that work autonomously on your GitH
 
 ## Installation
 
+Until the first npm release is published, install from a local tarball:
+
 ```bash
-bun add cursor-agents
+npm pack
+npm install -g ./twelvehart-cursor-agents-0.1.0.tgz
+cursor-agents --help
 ```
 
-The package also installs a CLI binary:
+After the package is published, install it from npm:
 
 ```bash
-bunx cursor-agents --help
-# or after a global install
-npm install -g cursor-agents
+npm install -g @twelvehart/cursor-agents
+bun add @twelvehart/cursor-agents
+```
+
+The package installs the `cursor-agents` CLI binary:
+
+```bash
+npx @twelvehart/cursor-agents --help
 cursor-agents --help
 ```
 
@@ -50,7 +59,7 @@ CURSOR_BASE_URL=https://api.cursor.com
 ## SDK Usage
 
 ```typescript
-import { CursorAgents } from "cursor-agents";
+import { CursorAgents } from "@twelvehart/cursor-agents";
 
 const client = new CursorAgents();
 // Or: new CursorAgents({ apiKey: "cur_..." })
