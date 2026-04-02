@@ -1,9 +1,15 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, rmSync } from "node:fs";
+import { chmodSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 
 const root = new URL("../", import.meta.url);
+const binWrapper = `#!/usr/bin/env node
 
+import "../dist/cli/index.js";
+`;
+
+rmSync(new URL("../bin", import.meta.url), { force: true, recursive: true });
 rmSync(new URL("../dist", import.meta.url), { force: true, recursive: true });
+mkdirSync(new URL("../bin", import.meta.url), { recursive: true });
 mkdirSync(new URL("../dist/cli", import.meta.url), { recursive: true });
 
 run("bun", [
@@ -38,6 +44,9 @@ run("tsc", [
   "--outDir",
   "dist",
 ]);
+
+writeFileSync(new URL("../bin/cursor-agents.js", import.meta.url), binWrapper);
+chmodSync(new URL("../bin/cursor-agents.js", import.meta.url), 0o755);
 
 function run(command, args) {
   const result = spawnSync(command, args, {
