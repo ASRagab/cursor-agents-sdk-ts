@@ -39,8 +39,12 @@ jobs:
       - name: Build package
         run: bun run build
 
-      - name: Smoke test packaged CLI
-        run: node bin/cursor-agents.js --help
-
       - name: Verify publish tarball contents
         run: npm pack --dry-run
+
+      - name: Smoke test packed CLI
+        run: |
+          PACKAGE_FILE=$(npm pack | tail -n 1)
+          TMPDIR=$(mktemp -d)
+          npm install --prefix "$TMPDIR" "$PACKAGE_FILE"
+          "$TMPDIR/node_modules/.bin/cursor-agents" --help
