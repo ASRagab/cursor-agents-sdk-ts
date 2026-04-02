@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { AgentsAPI } from "./agents";
 import { ArtifactsAPI } from "./artifacts";
 import { BaseClient, type ClientOptions } from "./client";
@@ -10,7 +11,22 @@ import {
   RepositoriesResponseSchema,
 } from "./schemas";
 
-export const VERSION = "0.1.0";
+const require = createRequire(import.meta.url);
+const packageJson = readPackageJson();
+
+export const VERSION = packageJson.version;
+
+function readPackageJson(): { version: string } {
+  for (const path of ["../package.json", "../../package.json"]) {
+    try {
+      return require(path) as { version: string };
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error("Unable to resolve package.json for version metadata.");
+}
 
 export class CursorAgents {
   readonly agents: AgentsAPI & { artifacts: ArtifactsAPI };

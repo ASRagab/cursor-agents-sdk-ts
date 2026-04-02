@@ -57,6 +57,31 @@ describe("create option validation", () => {
     expect(() => validateCreateOptions({ repo: "owner/repo", prompt: "test" })).not.toThrow();
   });
 
+  test("rejects --repo with --pr", () => {
+    expect(() =>
+      validateCreateOptions({
+        repo: "owner/repo",
+        pr: "https://github.com/o/r/pull/1",
+        prompt: "text",
+      }),
+    ).toThrow(CursorAgentsError);
+    try {
+      validateCreateOptions({
+        repo: "owner/repo",
+        pr: "https://github.com/o/r/pull/1",
+        prompt: "text",
+      });
+    } catch (error) {
+      const e = error as CursorAgentsError;
+      expect(e.message).toContain("--repo and --pr are mutually exclusive");
+      expect(e.details).toEqual({
+        hint: "--repo starts from a repository branch. --pr starts from an existing pull request.",
+        nextStep:
+          "Pick exactly one source mode: use --repo <owner/repo> for repository-based runs or --pr <url> for PR-based runs.",
+      });
+    }
+  });
+
   test("returns structured details for invalid repo input", () => {
     expect(() => validateCreateOptions({ repo: "not a repo", prompt: "test" })).toThrow(
       CursorAgentsError,

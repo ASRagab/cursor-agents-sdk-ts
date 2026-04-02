@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
+import packageJson from "../../package.json";
 import { VERSION } from "../../src/index";
 
-test("version is 0.1.0", () => {
-  expect(VERSION).toBe("0.1.0");
+test("version matches package.json", () => {
+  expect(VERSION).toBe(packageJson.version);
 });
