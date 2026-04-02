@@ -89,6 +89,12 @@ const models = await client.models();
 const repos = await client.repositories();
 ```
 
+## Publishing
+
+This repository is set up to publish `@twelvehart/cursor-agents` with `release-please`. Commits merged to `main` update or create a release PR, and merging that PR triggers a GitHub release plus npm publish after lint, typecheck, unit tests, build, CLI smoke test, and `npm pack --dry-run`.
+
+To make the workflow actually publish on npm, configure npm trusted publishing for the `@twelvehart/cursor-agents` package and point it at `.github/workflows/release-please.yml`. npm's current docs recommend trusted publishing with GitHub-hosted runners and `id-token: write` instead of long-lived `NPM_TOKEN` secrets.
+
 ## CLI Usage
 
 ### Global Flags

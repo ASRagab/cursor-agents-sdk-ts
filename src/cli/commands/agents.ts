@@ -98,6 +98,19 @@ export function validateCreateOptions(opts: {
     });
   }
 
+  if (opts.repo && opts.pr) {
+    throw new CursorAgentsError({
+      code: "bad_request",
+      status: 400,
+      message: "--repo and --pr are mutually exclusive.",
+      details: {
+        hint: "--repo starts from a repository branch. --pr starts from an existing pull request.",
+        nextStep:
+          "Pick exactly one source mode: use --repo <owner/repo> for repository-based runs or --pr <url> for PR-based runs.",
+      },
+    });
+  }
+
   if (!opts.prompt && !opts.promptFile) {
     throw new CursorAgentsError({
       code: "bad_request",
