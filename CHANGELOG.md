@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/ASRagab/cursor-agents-sdk-ts/compare/v0.2.0...v1.0.0) (2026-04-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* Repository.url is renamed to Repository.repository to match the API response field. Code that reads repositories[i].url must be updated.
+
+### Features
+
+* sync SDK with latest Cursor Cloud Agents API docs ([df6a173](https://github.com/ASRagab/cursor-agents-sdk-ts/commit/df6a1732f84a87b99a4f7ce4693daf83e9818abb))
+
 ## 0.2.0 (2026-04-02)
 
 
