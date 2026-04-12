@@ -6,15 +6,7 @@ Create, manage, and monitor AI coding agents that work autonomously on your GitH
 
 ## Installation
 
-Until the first npm release is published, install from a local tarball:
-
-```bash
-npm pack
-npm install -g ./twelvehart-cursor-agents-0.1.0.tgz
-cursor-agents --help
-```
-
-After the package is published, install it from npm:
+Install from npm:
 
 ```bash
 npm install -g @twelvehart/cursor-agents
@@ -70,6 +62,12 @@ const agent = await client.agents.create({
   source: { repository: "https://github.com/owner/repo", ref: "main" },
   model: "claude-4-sonnet-thinking",
   target: { autoCreatePr: true },
+  // Optional: receive status-change notifications via webhook.
+  // If `secret` is provided, it must be at least 32 characters.
+  webhook: {
+    url: "https://example.com/cursor-agents-hook",
+    secret: process.env.CURSOR_WEBHOOK_SECRET,
+  },
 });
 
 // Wait for completion
@@ -264,15 +262,17 @@ Or copy the file manually into your agent's skills directory (e.g., `.claude/ski
 
 | Method | Description |
 |--------|-------------|
-| `agents.create(opts)` | Launch an agent |
+| `agents.create(opts)` | Launch an agent. `opts` accepts `prompt`, `source`, `model`, `target`, and optional `webhook`. |
 | `agents.list(opts?)` | List agents (paginated) |
 | `agents.get(id)` | Get agent status |
-| `agents.delete(id)` | Delete agent |
-| `agents.stop(id)` | Stop running agent |
-| `agents.followup(id, opts)` | Send followup instruction |
+| `agents.delete(id)` | Delete agent (permanent) |
+| `agents.stop(id)` | Pause a running agent. Sending a `followup` resumes it. |
+| `agents.followup(id, opts)` | Send followup instruction (also resumes a stopped agent) |
 | `agents.conversation(id)` | Get conversation history |
 | `agents.waitFor(id, opts?)` | Poll until terminal state |
 | `agents.watch(id, opts?)` | Tail conversation messages |
+
+`CreateAgentOpts.webhook` is `{ url: string; secret?: string }` where `secret` must be at least 32 characters if provided.
 
 ### Artifact Methods
 

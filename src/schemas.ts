@@ -33,8 +33,16 @@ export const TargetSchema = z.object({
   skipReviewerRequest: z.boolean().optional(),
   branchName: z.string().optional(),
   autoBranch: z.boolean().optional(),
+  url: z.string().optional(),
+  prUrl: z.string().optional(),
 });
 export type Target = z.infer<typeof TargetSchema>;
+
+export const WebhookSchema = z.object({
+  url: z.string(),
+  secret: z.string().min(32).optional(),
+});
+export type Webhook = z.infer<typeof WebhookSchema>;
 
 export const AgentSchema = z.object({
   id: z.string(),
@@ -55,6 +63,7 @@ export const CreateAgentRequestSchema = z.object({
   ]),
   model: z.string().optional(),
   target: TargetSchema.optional(),
+  webhook: WebhookSchema.optional(),
 });
 export type CreateAgentRequest = z.infer<typeof CreateAgentRequestSchema>;
 
@@ -63,6 +72,7 @@ export const CreateAgentResponseSchema = z.object({
   name: z.string().optional(),
   status: AgentStatusSchema,
   source: SourceSchema,
+  target: TargetSchema.optional(),
   createdAt: z.string(),
 });
 export type CreateAgentResponse = z.infer<typeof CreateAgentResponseSchema>;
@@ -119,7 +129,7 @@ export type ModelsResponse = z.infer<typeof ModelsResponseSchema>;
 export const RepositorySchema = z.object({
   owner: z.string(),
   name: z.string(),
-  url: z.string(),
+  repository: z.string(),
 });
 export type Repository = z.infer<typeof RepositorySchema>;
 

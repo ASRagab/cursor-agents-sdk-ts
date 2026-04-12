@@ -34,7 +34,7 @@ export function registerModelsCommands(program: Command, getClient: () => Cursor
           printResult(result, true);
         } else {
           for (const r of result.repositories) {
-            process.stdout.write(`${r.owner}/${r.name}  ${r.url}\n`);
+            process.stdout.write(`${r.owner}/${r.name}  ${r.repository}\n`);
           }
         }
       } catch (err) {

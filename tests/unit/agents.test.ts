@@ -51,6 +51,50 @@ describe("AgentsAPI", () => {
     expect(call[1]?.method).toBe("POST");
   });
 
+  test("create serializes webhook in body", async () => {
+    mockFetch({
+      id: "agent_1",
+      status: "CREATING",
+      source: { repository: "https://github.com/foo/bar" },
+      createdAt: "2026-04-01T10:00:00Z",
+    });
+
+    const secret = "x".repeat(32);
+    await agents.create({
+      prompt: { text: "Fix the tests" },
+      source: { repository: "https://github.com/foo/bar" },
+      webhook: { url: "https://example.com/hook", secret },
+    });
+
+    const call = (globalThis.fetch as ReturnType<typeof mock>).mock.calls[0];
+    const body = JSON.parse(call[1]?.body as string);
+    expect(body.webhook.url).toBe("https://example.com/hook");
+    expect(body.webhook.secret).toBe(secret);
+  });
+
+  test("create serializes target url/prUrl response fields via target echo", async () => {
+    mockFetch({
+      id: "agent_1",
+      status: "CREATING",
+      source: { repository: "https://github.com/foo/bar" },
+      target: {
+        branchName: "feature/x",
+        url: "https://cursor.com/agents?id=agent_1",
+        prUrl: "https://github.com/foo/bar/pull/7",
+        autoCreatePr: true,
+      },
+      createdAt: "2026-04-01T10:00:00Z",
+    });
+
+    const result = await agents.create({
+      prompt: { text: "Fix" },
+      source: { repository: "https://github.com/foo/bar" },
+      target: { autoCreatePr: true, branchName: "feature/x" },
+    });
+    expect(result.target?.url).toBe("https://cursor.com/agents?id=agent_1");
+    expect(result.target?.prUrl).toBe("https://github.com/foo/bar/pull/7");
+  });
+
   test("list returns paginated agents", async () => {
     mockFetch({
       agents: [

@@ -13,6 +13,7 @@ import {
   ListAgentsResponseSchema,
   type Prompt,
   type Target,
+  type Webhook,
 } from "./schemas";
 
 export interface CreateAgentOpts {
@@ -20,6 +21,7 @@ export interface CreateAgentOpts {
   source: { repository: string; ref?: string } | { prUrl: string };
   model?: string;
   target?: Target;
+  webhook?: Webhook;
 }
 
 export interface ListAgentsOpts {
@@ -53,6 +55,7 @@ export class AgentsAPI {
         source: opts.source,
         model: opts.model,
         target: opts.target,
+        webhook: opts.webhook,
       }),
     });
   }

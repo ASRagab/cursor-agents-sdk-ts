@@ -87,7 +87,7 @@ describe("BaseClient constructor", () => {
 
     const call = (globalThis.fetch as ReturnType<typeof mock>).mock.calls[0];
     const headers = call[1]?.headers as Record<string, string>;
-    expect(headers.Authorization).toBe("Bearer env_key");
+    expect(headers.Authorization).toBe(`Basic ${Buffer.from("env_key:").toString("base64")}`);
     expect(call[0]).toBe("https://env.api.com/v0/test");
   });
 });
@@ -109,14 +109,14 @@ describe("BaseClient.request", () => {
     }
   });
 
-  test("sends auth header", async () => {
+  test("sends basic auth header", async () => {
     mockFetch({ name: "test", value: 42 });
     const client = new BaseClient({ apiKey: "my_key" });
     await client.request("/v0/test", testSchema);
 
     const call = (globalThis.fetch as ReturnType<typeof mock>).mock.calls[0];
     const headers = call[1]?.headers as Record<string, string>;
-    expect(headers.Authorization).toBe("Bearer my_key");
+    expect(headers.Authorization).toBe(`Basic ${Buffer.from("my_key:").toString("base64")}`);
   });
 
   test("parses successful response with schema", async () => {

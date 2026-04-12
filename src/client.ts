@@ -33,7 +33,7 @@ export class BaseClient {
   async request<T>(path: string, schema: z.ZodType<T>, init?: RequestInit): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Basic ${Buffer.from(`${this.apiKey}:`).toString("base64")}`,
       "Content-Type": "application/json",
       ...((init?.headers as Record<string, string>) ?? {}),
     };
