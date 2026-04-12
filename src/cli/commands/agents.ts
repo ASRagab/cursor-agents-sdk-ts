@@ -515,7 +515,7 @@ Examples:
 
   program
     .command("stop")
-    .description("Stop a running agent (cannot be resumed)")
+    .description("Pause a running agent (send a followup to resume)")
     .argument("<agent-id>", "Agent ID")
     .action(async (agentId) => {
       const json = program.opts().json;

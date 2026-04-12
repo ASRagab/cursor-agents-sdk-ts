@@ -48,7 +48,7 @@ describe("Integration: Cursor Cloud Agents API", () => {
       prompt: {
         text: "List the files in the root directory of this repo. Just list them, nothing else.",
       },
-      source: { repository: repo.url },
+      source: { repository: repo.repository },
     });
     expect(created.id).toBeDefined();
     expect(created.status).toBe("CREATING");

@@ -74,4 +74,5 @@ export type {
   Repository,
   Source,
   Target,
+  Webhook,
 } from "./schemas";

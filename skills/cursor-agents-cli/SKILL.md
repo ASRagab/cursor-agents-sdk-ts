@@ -4,7 +4,7 @@ description: Operate the cursor-agents CLI to launch, monitor, and manage Cursor
 license: MIT
 metadata:
   author: ASRagab
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Cursor Agents CLI -- Coding Agent Skill
@@ -159,7 +159,7 @@ cursor-agents watch <agent-id> [--interval <ms>] --json
 # Send follow-up instruction
 cursor-agents followup <agent-id> --prompt <text> [--prompt-file <path>] [--image <path...>] --json
 
-# Stop a running agent (irreversible -- cannot be resumed)
+# Stop a running agent (pauses execution; a followup prompt resumes it)
 cursor-agents stop <agent-id> --json
 
 # Delete an agent permanently
@@ -283,6 +283,9 @@ cursor-agents followup <agent-id> --prompt "Also update the README" --json
 cursor-agents wait <agent-id> --json
 ```
 
+A `followup` also resumes a **stopped** agent, so the same pattern works after
+`cursor-agents stop <agent-id>` when you want to redirect the work before letting it continue.
+
 ### F. List agents for a specific PR
 
 ```bash
@@ -347,8 +350,10 @@ Follow this logic when handling a user request:
 
 ## Important Notes
 
-- `stop` is **irreversible** -- a stopped agent cannot be resumed. Only stop if the user explicitly requests it.
+- `stop` **pauses** a running agent without deleting it. Sending a `followup` to a stopped agent resumes it. Only `stop` if the user explicitly requests it -- even a pause interrupts the agent's current work.
 - `delete` is **permanent** -- the agent and all its artifacts are destroyed.
 - Up to **5 images** can be attached with `--image <path>` (base64-encoded automatically).
-- The CLI version this skill targets: **0.1.0**.
+- **Artifacts are retained for 6 months.** `artifacts <id>` and `download <id> <path>` return `400` for older agents. Each endpoint is rate-limited to 300/min and 6000/hour.
+- **`repos` is heavily rate-limited**: 1 request/user/minute and 30/user/hour, and can take tens of seconds to respond. Cache the result for the session; do not re-query on every command.
+- The CLI version this skill targets: **0.2.0**.
 - If the CLI returns unexpected errors, verify the command with `cursor-agents <command> --help`.

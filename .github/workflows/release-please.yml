@@ -22,9 +22,6 @@ jobs:
         uses: googleapis/release-please-action@v4
         with:
           release-type: node
-          # Bootstrap the first release at the current package version.
-          # After the first successful release, this line can be removed.
-          release-as: 0.2.0
 
   publish:
     needs: release-please

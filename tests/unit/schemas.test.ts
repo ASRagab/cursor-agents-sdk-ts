@@ -4,10 +4,12 @@ import {
   ArtifactSchema,
   ConversationSchema,
   CreateAgentRequestSchema,
+  CreateAgentResponseSchema,
   ImageSchema,
   MeResponseSchema,
   ModelsResponseSchema,
   RepositoriesResponseSchema,
+  WebhookSchema,
 } from "../../src/schemas";
 
 describe("AgentSchema", () => {
@@ -29,7 +31,12 @@ describe("AgentSchema", () => {
       name: "my-agent",
       status: "FINISHED",
       source: { repository: "https://github.com/foo/bar", ref: "main" },
-      target: { autoCreatePr: true, branchName: "feat/test" },
+      target: {
+        autoCreatePr: true,
+        branchName: "feat/test",
+        url: "https://cursor.com/agents?id=agent_456",
+        prUrl: "https://github.com/foo/bar/pull/99",
+      },
       summary: "Fixed the bug",
       createdAt: "2026-04-01T10:00:00Z",
     };
@@ -37,6 +44,8 @@ describe("AgentSchema", () => {
     expect(result.name).toBe("my-agent");
     expect(result.summary).toBe("Fixed the bug");
     expect(result.target?.autoCreatePr).toBe(true);
+    expect(result.target?.url).toBe("https://cursor.com/agents?id=agent_456");
+    expect(result.target?.prUrl).toBe("https://github.com/foo/bar/pull/99");
   });
 
   test("rejects invalid status", () => {
@@ -78,6 +87,79 @@ describe("CreateAgentRequestSchema", () => {
     };
     const result = CreateAgentRequestSchema.parse(data);
     expect(result.model).toBe("claude-4-sonnet");
+  });
+
+  test("accepts optional webhook", () => {
+    const data = {
+      prompt: { text: "Do the thing" },
+      source: { repository: "https://github.com/foo/bar" },
+      webhook: {
+        url: "https://example.com/hook",
+        secret: "0123456789abcdef0123456789abcdef",
+      },
+    };
+    const result = CreateAgentRequestSchema.parse(data);
+    expect(result.webhook?.url).toBe("https://example.com/hook");
+    expect(result.webhook?.secret).toBe("0123456789abcdef0123456789abcdef");
+  });
+});
+
+describe("CreateAgentResponseSchema", () => {
+  test("parses response with target", () => {
+    const data = {
+      id: "bc_abc123",
+      name: "Add README",
+      status: "CREATING",
+      source: { repository: "https://github.com/foo/bar", ref: "main" },
+      target: {
+        branchName: "feature/add-readme",
+        url: "https://cursor.com/agents?id=bc_abc123",
+        prUrl: "https://github.com/foo/bar/pull/123",
+        autoCreatePr: true,
+        openAsCursorGithubApp: false,
+        skipReviewerRequest: false,
+      },
+      createdAt: "2026-04-01T10:30:00Z",
+    };
+    const result = CreateAgentResponseSchema.parse(data);
+    expect(result.target?.branchName).toBe("feature/add-readme");
+    expect(result.target?.prUrl).toBe("https://github.com/foo/bar/pull/123");
+  });
+
+  test("parses response without target", () => {
+    const data = {
+      id: "bc_abc123",
+      status: "CREATING",
+      source: { repository: "https://github.com/foo/bar" },
+      createdAt: "2026-04-01T10:30:00Z",
+    };
+    const result = CreateAgentResponseSchema.parse(data);
+    expect(result.id).toBe("bc_abc123");
+    expect(result.target).toBeUndefined();
+  });
+});
+
+describe("WebhookSchema", () => {
+  test("requires url", () => {
+    expect(() => WebhookSchema.parse({})).toThrow();
+  });
+
+  test("accepts url-only webhook", () => {
+    const result = WebhookSchema.parse({ url: "https://example.com/hook" });
+    expect(result.url).toBe("https://example.com/hook");
+    expect(result.secret).toBeUndefined();
+  });
+
+  test("rejects secret shorter than 32 chars", () => {
+    expect(() =>
+      WebhookSchema.parse({ url: "https://example.com/hook", secret: "too-short" }),
+    ).toThrow();
+  });
+
+  test("accepts 32-char secret", () => {
+    const secret = "x".repeat(32);
+    const result = WebhookSchema.parse({ url: "https://example.com/hook", secret });
+    expect(result.secret).toBe(secret);
   });
 });
 
@@ -170,11 +252,14 @@ describe("RepositoriesResponseSchema", () => {
         {
           owner: "ASRagab",
           name: "cursor-agents-sdk-ts",
-          url: "https://github.com/ASRagab/cursor-agents-sdk-ts",
+          repository: "https://github.com/ASRagab/cursor-agents-sdk-ts",
         },
       ],
     };
     const result = RepositoriesResponseSchema.parse(data);
     expect(result.repositories[0].owner).toBe("ASRagab");
+    expect(result.repositories[0].repository).toBe(
+      "https://github.com/ASRagab/cursor-agents-sdk-ts",
+    );
   });
 });
