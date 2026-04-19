@@ -63,3 +63,5 @@ vendor/
 coverage/
 .cache/
 tmp/
+
+.mcp.json
