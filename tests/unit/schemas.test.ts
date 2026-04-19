@@ -239,7 +239,7 @@ describe("MeResponseSchema", () => {
 
 describe("ModelsResponseSchema", () => {
   test("parses models list", () => {
-    const data = { models: ["claude-4-sonnet", "gpt-5.2"] };
+    const data = { models: ["composer-2", "claude-opus-4-7-thinking-high"] };
     const result = ModelsResponseSchema.parse(data);
     expect(result.models).toHaveLength(2);
   });
