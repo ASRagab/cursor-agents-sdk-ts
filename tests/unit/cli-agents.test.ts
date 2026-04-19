@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { Command } from "commander";
 import {
   getModelHint,
@@ -8,6 +8,8 @@ import {
   validateCreateOptions,
 } from "../../src/cli/commands/agents";
 import { CursorAgentsError } from "../../src/errors";
+import type { CursorAgents } from "../../src/index";
+import type { Agent, ConversationMessage, CreateAgentResponse } from "../../src/schemas";
 
 describe("normalizeRepositoryInput", () => {
   test("normalizes owner/repo shorthand", () => {
@@ -311,5 +313,121 @@ describe("create help text", () => {
     expect(help).toContain("Start from an existing pull request URL");
     expect(help).toContain("Open a pull request automatically after the run");
     expect(help).toContain("Create/select a branch automatically for PR follow-up");
+  });
+});
+
+describe("watch json output contracts", () => {
+  const originalStdoutWrite = process.stdout.write;
+  let stdoutChunks: string[];
+
+  const streamedMessage: ConversationMessage = {
+    id: "msg_1",
+    type: "assistant_message",
+    text: "Working on it",
+  };
+
+  const createdAgent: CreateAgentResponse = {
+    id: "agent_1",
+    status: "CREATING",
+    source: { repository: "https://github.com/owner/repo" },
+    createdAt: "2026-04-01T10:00:00Z",
+  };
+
+  const finishedAgent: Agent = {
+    id: "agent_1",
+    status: "FINISHED",
+    source: { repository: "https://github.com/owner/repo" },
+    summary: "Completed successfully",
+    createdAt: "2026-04-01T10:00:00Z",
+  };
+
+  function captureStdout(chunk: string | Uint8Array): boolean {
+    stdoutChunks.push(typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8"));
+    return true;
+  }
+
+  function createProgram(getClient: () => CursorAgents): Command {
+    const program = new Command();
+    program
+      .option("--json", "Output structured JSON")
+      .option("--quiet", "Suppress non-essential output");
+    registerAgentsCommands(program, getClient);
+    return program;
+  }
+
+  beforeEach(() => {
+    stdoutChunks = [];
+    process.stdout.write = ((chunk: string | Uint8Array) =>
+      captureStdout(chunk)) as typeof process.stdout.write;
+  });
+
+  afterEach(() => {
+    process.stdout.write = originalStdoutWrite;
+  });
+
+  test("watch --json emits streamed messages and a final ok envelope", async () => {
+    const watch = mock(
+      async (_agentId: string, opts?: { onMessage?: (msg: ConversationMessage) => void }) => {
+        opts?.onMessage?.(streamedMessage);
+        return finishedAgent;
+      },
+    );
+
+    const client = {
+      agents: {
+        watch,
+      },
+    } as unknown as CursorAgents;
+
+    const program = createProgram(() => client);
+    await program.parseAsync(["--json", "watch", "agent_1"], { from: "user" });
+
+    const lines = stdoutChunks.join("").trim().split("\n");
+    expect(lines).toHaveLength(2);
+    expect(JSON.parse(lines[0])).toEqual(streamedMessage);
+    expect(JSON.parse(lines[1])).toEqual({ ok: true, data: finishedAgent });
+    expect(watch).toHaveBeenCalledWith(
+      "agent_1",
+      expect.objectContaining({ onMessage: expect.any(Function) }),
+    );
+  });
+
+  test("create --watch --json emits message lines before the final agent envelope", async () => {
+    const create = mock(async () => createdAgent);
+    const watch = mock(
+      async (_agentId: string, opts?: { onMessage?: (msg: ConversationMessage) => void }) => {
+        opts?.onMessage?.(streamedMessage);
+        return finishedAgent;
+      },
+    );
+
+    const client = {
+      agents: {
+        create,
+        watch,
+      },
+    } as unknown as CursorAgents;
+
+    const program = createProgram(() => client);
+    await program.parseAsync(
+      ["--json", "create", "--repo", "owner/repo", "--prompt", "Fix it", "--watch"],
+      { from: "user" },
+    );
+
+    const lines = stdoutChunks.join("").trim().split("\n");
+    expect(lines).toHaveLength(3);
+    expect(JSON.parse(lines[0])).toEqual({ ok: true, data: createdAgent });
+    expect(JSON.parse(lines[1])).toEqual(streamedMessage);
+    expect(JSON.parse(lines[2])).toEqual({ ok: true, data: finishedAgent });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: { text: "Fix it", images: undefined },
+        source: { repository: "https://github.com/owner/repo", ref: undefined },
+      }),
+    );
+    expect(watch).toHaveBeenCalledWith(
+      "agent_1",
+      expect.objectContaining({ onMessage: expect.any(Function), onStatus: expect.any(Function) }),
+    );
   });
 });

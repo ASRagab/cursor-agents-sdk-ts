@@ -365,7 +365,9 @@ Examples:
         if (opts.watch) {
           const agent = await getClient().agents.watch(result.id, {
             onMessage: (msg) => {
-              if (!json) {
+              if (json) {
+                process.stdout.write(`${JSON.stringify(msg)}\n`);
+              } else {
                 const prefix = msg.type === "user_message" ? "USER" : "AGENT";
                 process.stderr.write(`[${prefix}] ${msg.text}\n`);
               }
@@ -485,9 +487,7 @@ Examples:
             }
           },
         });
-        if (!json) {
-          process.stdout.write(`\n${formatAgent(result)}\n`);
-        }
+        printResult(json ? result : formatAgent(result), json);
       } catch (err) {
         printError(err, json);
         process.exit(exitCodeForError(err));
