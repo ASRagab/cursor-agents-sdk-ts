@@ -21,6 +21,7 @@
     "test": "bun test tests/unit",
     "test:all": "bun test tests",
     "test:integration": "bun test tests/integration",
+    "verify:s04": "bun run scripts/verify-contract-s04.ts",
     "build": "node scripts/build.mjs",
     "prepack": "bun run build"
   },
