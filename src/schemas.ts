@@ -24,6 +24,7 @@ export type AgentStatus = z.infer<typeof AgentStatusSchema>;
 export const SourceSchema = z.object({
   repository: z.string(),
   ref: z.string().optional(),
+  prUrl: z.string().optional(),
 });
 export type Source = z.infer<typeof SourceSchema>;
 
@@ -51,6 +52,9 @@ export const AgentSchema = z.object({
   source: SourceSchema,
   target: TargetSchema.optional(),
   summary: z.string().optional(),
+  filesChanged: z.number().optional(),
+  linesAdded: z.number().optional(),
+  linesRemoved: z.number().optional(),
   createdAt: z.string(),
 });
 export type Agent = z.infer<typeof AgentSchema>;

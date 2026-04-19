@@ -48,6 +48,57 @@ describe("AgentSchema", () => {
     expect(result.target?.prUrl).toBe("https://github.com/foo/bar/pull/99");
   });
 
+  test("parses agent with promoted additive fields", () => {
+    const data = {
+      id: "agent_789",
+      status: "FINISHED",
+      source: {
+        repository: "https://github.com/foo/bar",
+        ref: "main",
+        prUrl: "https://github.com/o/r/pull/1",
+      },
+      target: {
+        autoCreatePr: true,
+        branchName: "feat/additive-fields",
+        url: "https://github.com/o/r/tree/feat/additive-fields",
+        prUrl: "https://github.com/o/r/pull/2",
+      },
+      summary: "Added contract fields",
+      filesChanged: 3,
+      linesAdded: 10,
+      linesRemoved: 2,
+      createdAt: "2026-04-01T10:00:00Z",
+    };
+
+    const result = AgentSchema.parse(data);
+
+    expect(result.filesChanged).toBe(3);
+    expect(result.linesAdded).toBe(10);
+    expect(result.linesRemoved).toBe(2);
+    expect(result.source.prUrl).toBe("https://github.com/o/r/pull/1");
+    expect(result.target?.url).toBe("https://github.com/o/r/tree/feat/additive-fields");
+    expect(result.target?.prUrl).toBe("https://github.com/o/r/pull/2");
+  });
+
+  test("leaves promoted additive fields undefined when absent", () => {
+    const data = {
+      id: "agent_790",
+      status: "RUNNING",
+      source: { repository: "https://github.com/foo/bar" },
+      target: { autoCreatePr: false },
+      createdAt: "2026-04-01T10:00:00Z",
+    };
+
+    const result = AgentSchema.parse(data);
+
+    expect(result.filesChanged).toBeUndefined();
+    expect(result.linesAdded).toBeUndefined();
+    expect(result.linesRemoved).toBeUndefined();
+    expect(result.source.prUrl).toBeUndefined();
+    expect(result.target?.url).toBeUndefined();
+    expect(result.target?.prUrl).toBeUndefined();
+  });
+
   test("rejects invalid status", () => {
     const data = {
       id: "agent_123",

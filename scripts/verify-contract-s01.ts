@@ -137,7 +137,13 @@ function inspectBody(body: unknown): {
 }
 
 /** Print the per-endpoint summary line plus any array field unions. */
-function printResult(ep: string, status: number, topLevelKeys: string[], itemFieldSets?: Record<string, string[]>, extra?: string) {
+function printResult(
+  ep: string,
+  status: number,
+  topLevelKeys: string[],
+  itemFieldSets?: Record<string, string[]>,
+  extra?: string,
+) {
   const tag = `[OK]   `;
   const suffix = extra ? `  ${extra}` : "";
   console.log(`${tag}${ep} → ${status}  keys=${topLevelKeys.join(", ")}${suffix}`);
@@ -157,7 +163,10 @@ async function main(): Promise<void> {
   let hasError = false;
 
   // Helper: wrap a single endpoint call with uniform error handling
-  async function probe(ep: string, extra?: (body: unknown) => string | undefined): Promise<EndpointResult> {
+  async function probe(
+    ep: string,
+    extra?: (body: unknown) => string | undefined,
+  ): Promise<EndpointResult> {
     try {
       const { status, body } = await getEndpoint(ep);
 
@@ -211,9 +220,27 @@ async function main(): Promise<void> {
     console.log("[SKIP] /v0/agents/{id}/conversation  — no agents found in list");
     console.log("[SKIP] /v0/agents/{id}/artifacts     — no agents found in list");
     results.push(
-      { endpoint: "/v0/agents/{id}", status: 0, ok: true, topLevelKeys: [], error: "skipped — no agents" },
-      { endpoint: "/v0/agents/{id}/conversation", status: 0, ok: true, topLevelKeys: [], error: "skipped — no agents" },
-      { endpoint: "/v0/agents/{id}/artifacts", status: 0, ok: true, topLevelKeys: [], error: "skipped — no agents" },
+      {
+        endpoint: "/v0/agents/{id}",
+        status: 0,
+        ok: true,
+        topLevelKeys: [],
+        error: "skipped — no agents",
+      },
+      {
+        endpoint: "/v0/agents/{id}/conversation",
+        status: 0,
+        ok: true,
+        topLevelKeys: [],
+        error: "skipped — no agents",
+      },
+      {
+        endpoint: "/v0/agents/{id}/artifacts",
+        status: 0,
+        ok: true,
+        topLevelKeys: [],
+        error: "skipped — no agents",
+      },
     );
   } else {
     // ── /v0/agents/{id} ───────────────────────────────────────────────────
@@ -224,7 +251,13 @@ async function main(): Promise<void> {
       if (status < 200 || status >= 300) {
         console.error(`[FAIL] ${ep} → HTTP ${status}: ${redactedPreview(body)}`);
         hasError = true;
-        results.push({ endpoint: ep, status, ok: false, topLevelKeys: [], error: `HTTP ${status}` });
+        results.push({
+          endpoint: ep,
+          status,
+          ok: false,
+          topLevelKeys: [],
+          error: `HTTP ${status}`,
+        });
       } else {
         const topLevelKeys =
           body !== null && typeof body === "object" && !Array.isArray(body)
