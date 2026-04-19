@@ -506,7 +506,7 @@ Examples:
       try {
         const prompt = resolvePrompt(opts.prompt, opts.promptFile, opts.image);
         const result = await getClient().agents.followup(agentId, { prompt });
-        printResult(result, json);
+        printResult(json ? result : `Followup sent to agent ${result.id}`, json);
       } catch (err) {
         printError(err, json);
         process.exit(exitCodeForError(err));

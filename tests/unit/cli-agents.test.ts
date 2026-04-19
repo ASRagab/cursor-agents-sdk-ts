@@ -7,6 +7,7 @@ import {
   suggestModels,
   validateCreateOptions,
 } from "../../src/cli/commands/agents";
+import { formatAgent } from "../../src/cli/output";
 import { CursorAgentsError } from "../../src/errors";
 import type { CursorAgents } from "../../src/index";
 import type { Agent, ConversationMessage, CreateAgentResponse } from "../../src/schemas";
@@ -313,6 +314,95 @@ describe("create help text", () => {
     expect(help).toContain("Start from an existing pull request URL");
     expect(help).toContain("Open a pull request automatically after the run");
     expect(help).toContain("Create/select a branch automatically for PR follow-up");
+  });
+});
+
+describe("formatAgent", () => {
+  const baseAgent: Agent = {
+    id: "agent_1",
+    status: "FINISHED",
+    source: { repository: "https://github.com/x/y" },
+    summary: "Completed successfully",
+    createdAt: "2026-04-01T10:00:00Z",
+  };
+
+  test("includes promoted additive fields when present", () => {
+    const formatted = formatAgent({
+      ...baseAgent,
+      filesChanged: 3,
+      linesAdded: 10,
+      linesRemoved: 2,
+      target: {
+        url: "https://github.com/x/y/tree/agent-branch",
+        prUrl: "https://github.com/x/y/pull/1",
+      },
+    });
+
+    expect(formatted).toContain("Files changed: 3");
+    expect(formatted).toContain("Lines added: 10");
+    expect(formatted).toContain("Lines removed: 2");
+    expect(formatted).toContain("Target URL: https://github.com/x/y/tree/agent-branch");
+    expect(formatted).toContain("Target PR: https://github.com/x/y/pull/1");
+  });
+
+  test("omits additive field lines when values are undefined", () => {
+    const formatted = formatAgent(baseAgent);
+
+    expect(formatted).not.toContain("Files changed:");
+    expect(formatted).not.toContain("Lines added:");
+    expect(formatted).not.toContain("Lines removed:");
+    expect(formatted).not.toContain("Target URL:");
+    expect(formatted).not.toContain("Target PR:");
+    expect(formatted).not.toContain("undefined");
+  });
+});
+
+describe("followup human output", () => {
+  const originalStdoutWrite = process.stdout.write;
+  let stdoutChunks: string[];
+
+  function captureStdout(chunk: string | Uint8Array): boolean {
+    stdoutChunks.push(typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8"));
+    return true;
+  }
+
+  function createProgram(getClient: () => CursorAgents): Command {
+    const program = new Command();
+    program
+      .option("--json", "Output structured JSON")
+      .option("--quiet", "Suppress non-essential output");
+    registerAgentsCommands(program, getClient);
+    return program;
+  }
+
+  beforeEach(() => {
+    stdoutChunks = [];
+    process.stdout.write = ((chunk: string | Uint8Array) =>
+      captureStdout(chunk)) as typeof process.stdout.write;
+  });
+
+  afterEach(() => {
+    process.stdout.write = originalStdoutWrite;
+  });
+
+  test("prints a friendly confirmation in human mode", async () => {
+    const followup = mock(async () => ({ id: "agent_1" }));
+
+    const client = {
+      agents: {
+        followup,
+      },
+    } as unknown as CursorAgents;
+
+    const program = createProgram(() => client);
+    await program.parseAsync(["followup", "agent_1", "--prompt", "Continue fixing it"], {
+      from: "user",
+    });
+
+    expect(stdoutChunks.join("")).toBe("Followup sent to agent agent_1\n");
+    expect(followup).toHaveBeenCalledWith("agent_1", {
+      prompt: { text: "Continue fixing it", images: undefined },
+    });
   });
 });
 
