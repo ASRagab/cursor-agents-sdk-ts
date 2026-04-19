@@ -66,6 +66,17 @@ Pass these on every invocation:
 { "ok": true, "data": { "id": "agent_abc", "status": "FINISHED", ... } }
 ```
 
+The following promoted fields may appear on `data` when available; they are optional additions, not guaranteed on every success response.
+
+| Field | Type | Meaning |
+|------|------|---------|
+| `summary` | string | Agent-produced summary when available. |
+| `filesChanged` | number | Count of files touched. |
+| `linesAdded` | number | Number of lines added. |
+| `linesRemoved` | number | Number of lines removed. |
+| `target.url` | string | Target branch URL. |
+| `target.prUrl` | string | PR URL when an auto-PR was created. |
+
 ### Error
 
 ```json
@@ -239,9 +250,11 @@ All normalize to HTTPS automatically.
 cursor-agents create \
   --repo owner/repo --ref main \
   --prompt "Fix the failing tests in src/utils.ts" \
-  --model claude-4-sonnet-thinking \
+  --model <model-id> \
   --auto-pr --wait --json
 ```
+
+Discover valid model IDs with `cursor-agents models --json` before choosing `--model <model-id>`.
 
 Parse the final line. Confirm `data.status` is `"FINISHED"`.
 
@@ -357,3 +370,9 @@ Follow this logic when handling a user request:
 - **`repos` is heavily rate-limited**: 1 request/user/minute and 30/user/hour, and can take tens of seconds to respond. Cache the result for the session; do not re-query on every command.
 - The CLI version this skill targets: **0.2.0**.
 - If the CLI returns unexpected errors, verify the command with `cursor-agents <command> --help`.
+
+## Contract Verification
+
+Maintainers and agents can re-run the read-only live contract prober with `bun run verify:s04` to confirm the current CLI/SDK contract against the live API.
+Captures are written to `.gsd/milestones/M001/slices/S04/captures/*.json` and include HTTP status, schema verdicts, and additive-field evidence.
+This verifier requires `CURSOR_API_KEY` and only issues read-only requests; it does not create, update, or delete agents.
