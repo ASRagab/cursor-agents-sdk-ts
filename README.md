@@ -210,6 +210,10 @@ When `--json` is passed, all output is structured:
 { "ok": true, "data": { "id": "agent_123", "status": "FINISHED" } }
 ```
 
+When `--watch --json` is used, stdout emits one JSON object per conversation message followed by a final `{ "ok": true, "data": <agent> }` line. Parse the stream line-by-line rather than as a single JSON object.
+
+The agent `data` object may also include `summary`, `filesChanged`, `linesAdded`, `linesRemoved`, `target.url`, and `target.prUrl` when available.
+
 On error:
 
 ```json
@@ -299,6 +303,7 @@ bun run typecheck    # TypeScript type checking
 bun run lint         # Biome linter
 bun test             # Unit tests
 bun test tests/integration  # Integration tests (needs CURSOR_API_KEY)
+bun run verify:s04   # Read-only live contract verifier (needs CURSOR_API_KEY; writes captures under .gsd/milestones/M001/slices/S04/captures/)
 bun run build        # Build the SDK, CLI bundle, and type declarations
 npm pack --dry-run   # Verify published package contents
 ```
