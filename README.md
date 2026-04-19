@@ -60,7 +60,8 @@ const client = new CursorAgents();
 const agent = await client.agents.create({
   prompt: { text: "Fix the failing tests in src/utils.ts" },
   source: { repository: "https://github.com/owner/repo", ref: "main" },
-  model: "claude-4-sonnet-thinking",
+  // Run `cursor-agents models` to list valid model IDs
+  model: "<model-id>",
   target: { autoCreatePr: true },
   // Optional: receive status-change notifications via webhook.
   // If `secret` is provided, it must be at least 32 characters.
@@ -128,7 +129,8 @@ cursor-agents create \
   --repo owner/repo \
   --ref main \
   --prompt "Fix the failing tests" \
-  --model claude-4-sonnet-thinking \
+  # Run `cursor-agents models` to list valid model IDs
+  --model <model-id> \
   --auto-pr
 
 # Full GitHub URLs also work
