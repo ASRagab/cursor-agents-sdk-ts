@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0](https://github.com/ASRagab/cursor-agents-sdk-ts/compare/v1.0.0...v1.1.0) (2026-04-20)
+
+
+### Features
+
+* Add read-only live contract verification script (scripts/verify-c… ([7812b20](https://github.com/ASRagab/cursor-agents-sdk-ts/commit/7812b208a5615d451a7592d9f8fc4ec5feabba3e))
+* Updated CLI human output to show promoted agent fields and print… ([ae4a18c](https://github.com/ASRagab/cursor-agents-sdk-ts/commit/ae4a18c861712540346dd6df92ea89a6f67085bf))
+* Updated the cursor-agents CLI skill to use placeholder model IDs,… ([6189d97](https://github.com/ASRagab/cursor-agents-sdk-ts/commit/6189d979dbc43231e15e6f732c38fe4a870240ad))
+
+
+### Bug Fixes
+
+* Fixed CLI watch JSON streaming so both watch modes emit streamed m… ([a0ff989](https://github.com/ASRagab/cursor-agents-sdk-ts/commit/a0ff98994767191eb8fa8437cbeb98e811ae2a58))
+* use Basic auth in verify scripts to match SDK ([cc5426d](https://github.com/ASRagab/cursor-agents-sdk-ts/commit/cc5426da5420c3bf247a569793658f6a53ce2fa7))
+
 ## [1.0.0](https://github.com/ASRagab/cursor-agents-sdk-ts/compare/v0.2.0...v1.0.0) (2026-04-12)
 
 
