@@ -21,7 +21,7 @@ function readPackageJson(): { version: string } {
     try {
       return require(path) as { version: string };
     } catch {
-      continue;
+      // Try the next candidate path.
     }
   }
 

@@ -60,7 +60,8 @@ const client = new CursorAgents();
 const agent = await client.agents.create({
   prompt: { text: "Fix the failing tests in src/utils.ts" },
   source: { repository: "https://github.com/owner/repo", ref: "main" },
-  model: "claude-4-sonnet-thinking",
+  // Run `cursor-agents models` to list valid model IDs
+  model: "<model-id>",
   target: { autoCreatePr: true },
   // Optional: receive status-change notifications via webhook.
   // If `secret` is provided, it must be at least 32 characters.
@@ -128,7 +129,8 @@ cursor-agents create \
   --repo owner/repo \
   --ref main \
   --prompt "Fix the failing tests" \
-  --model claude-4-sonnet-thinking \
+  # Run `cursor-agents models` to list valid model IDs
+  --model <model-id> \
   --auto-pr
 
 # Full GitHub URLs also work
@@ -207,6 +209,10 @@ When `--json` is passed, all output is structured:
 ```json
 { "ok": true, "data": { "id": "agent_123", "status": "FINISHED" } }
 ```
+
+When `--watch --json` is used, stdout emits one JSON object per conversation message followed by a final `{ "ok": true, "data": <agent> }` line. Parse the stream line-by-line rather than as a single JSON object.
+
+The agent `data` object may also include `summary`, `filesChanged`, `linesAdded`, `linesRemoved`, `target.url`, and `target.prUrl` when available.
 
 On error:
 
@@ -297,6 +303,7 @@ bun run typecheck    # TypeScript type checking
 bun run lint         # Biome linter
 bun test             # Unit tests
 bun test tests/integration  # Integration tests (needs CURSOR_API_KEY)
+bun run verify:s04   # Read-only live contract verifier (needs CURSOR_API_KEY; writes captures under .gsd/milestones/M001/slices/S04/captures/)
 bun run build        # Build the SDK, CLI bundle, and type declarations
 npm pack --dry-run   # Verify published package contents
 ```

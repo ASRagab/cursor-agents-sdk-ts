@@ -1,4 +1,5 @@
 import { CursorAgentsError } from "../errors";
+import type { Agent } from "../schemas";
 
 const EXIT_CODES: Record<string, number> = {
   unauthorized: 2,
@@ -64,18 +65,22 @@ export function printError(err: unknown, json: boolean): void {
   }
 }
 
-export function formatAgent(agent: {
-  id: string;
-  status: string;
-  source?: { repository?: string };
-  summary?: string;
-  createdAt?: string;
-  name?: string;
-}): string {
+export function formatAgent(agent: Agent): string {
   const lines = [`Agent: ${agent.id}`, `Status: ${agent.status}`];
   if (agent.name) lines.push(`Name: ${agent.name}`);
-  if (agent.source?.repository) lines.push(`Repo: ${agent.source.repository}`);
+  if (agent.source.repository) lines.push(`Repo: ${agent.source.repository}`);
   if (agent.summary) lines.push(`Summary: ${agent.summary}`);
+  if (agent.filesChanged !== undefined) lines.push(`Files changed: ${agent.filesChanged}`);
+  if (agent.linesAdded !== undefined) lines.push(`Lines added: ${agent.linesAdded}`);
+  if (agent.linesRemoved !== undefined) lines.push(`Lines removed: ${agent.linesRemoved}`);
+  if (
+    agent.target?.url &&
+    agent.target.url !== agent.source.repository &&
+    agent.target.url !== agent.source.prUrl
+  ) {
+    lines.push(`Target URL: ${agent.target.url}`);
+  }
+  if (agent.target?.prUrl) lines.push(`Target PR: ${agent.target.prUrl}`);
   if (agent.createdAt) lines.push(`Created: ${agent.createdAt}`);
   return lines.join("\n");
 }
