@@ -165,7 +165,7 @@ async function getEndpoint(path: string): Promise<{ status: number; body: unknow
   const response = await fetch(`${BASE_URL}${path}`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Basic ${Buffer.from(`${API_KEY}:`).toString("base64")}`,
       "Content-Type": "application/json",
     },
   });

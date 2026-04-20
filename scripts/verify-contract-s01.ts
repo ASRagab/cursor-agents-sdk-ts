@@ -102,7 +102,7 @@ async function getEndpoint(path: string): Promise<{ status: number; body: unknow
     method: "GET",
     headers: {
       // Key is never logged or echoed
-      Authorization: `Bearer ${API_KEY}`,
+      Authorization: `Basic ${Buffer.from(`${API_KEY}:`).toString("base64")}`,
       "Content-Type": "application/json",
     },
   });
